@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "NKZW App",
-    "slug": "nkzw-app",
+    "name": "Frecuencia FM",
+    "slug": "frecuencia-fm",
     "version": "1.0.0",
-    "scheme": "nkzw-app",
+    "scheme": "frecuencia-fm",
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -41,9 +41,20 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.nkzw.www",
+      "bundleIdentifier": "app.frecuenciafm",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["audio"],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoadsForMedia": true,
+          "NSExceptionDomains": {
+            "enlace.motivafm.com": {
+              "NSIncludesSubdomains": true,
+              "NSTemporaryExceptionAllowsInsecureHTTPLoads": true,
+              "NSTemporaryExceptionMinimumTLSVersion": "TLSv1.0"
+            }
+          }
+        }
       }
     },
     "android": {
@@ -51,8 +62,9 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.nkzw.www",
-      "predictiveBackGestureEnabled": true
+      "package": "app.frecuenciafm",
+      "predictiveBackGestureEnabled": true,
+      "usesCleartextTraffic": true
     },
     "newArchEnabled": true,
     "extra": {

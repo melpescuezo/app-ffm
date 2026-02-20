@@ -1,61 +1,52 @@
-import _AntDesign from '@expo/vector-icons/AntDesign.js';
 import { type IconProps } from '@expo/vector-icons/build/createIconSet.js';
+import _MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons.js';
 import { Tabs } from 'expo-router';
-import { fbs, useLocaleContext } from 'fbtee';
-import { FC, useTransition } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import colors from '../../../ui/colors.ts';
+import { fbs } from 'fbtee';
+import { FC } from 'react';
 
 // Types in `@expo/vector-icons` do not currently work correctly in `"type": "module"` packages.
-const AntDesign = _AntDesign as unknown as FC<IconProps<string>>;
+const MaterialCommunityIcons = _MaterialCommunityIcons as unknown as FC<IconProps<string>>;
 
 export default function TabLayout() {
-  const [, startTransition] = useTransition();
-  const { locale, setLocale } = useLocaleContext();
-
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         sceneStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: '#000',
         },
-        tabBarActiveTintColor: colors.accent,
+        tabBarStyle: {
+          backgroundColor: '#000',
+          borderTopWidth: 0,
+          height: 78,
+          paddingBottom: 10,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: '#0000fe',
+        tabBarInactiveTintColor: '#9a9a9a',
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          headerRight: () => (
-            <Pressable
-              className="mr-2 rounded px-4 py-0"
-              onPress={() =>
-                startTransition(() => setLocale(locale === 'ja_JP' ? 'en_US' : 'ja_JP'))
-              }
-            >
-              {({ pressed }) => (
-                <View
-                  style={{
-                    opacity: pressed ? 0.5 : 1,
-                  }}
-                >
-                  <Text>{locale.split('_')[0]}</Text>
-                </View>
-              )}
-            </Pressable>
-          ),
           tabBarIcon: ({ focused }: { focused: boolean }) => (
-            <AntDesign color={focused ? colors.accent : colors.text} name="ie" size={24} />
+            <MaterialCommunityIcons color={focused ? '#0000fe' : '#9a9a9a'} name="home" size={28} />
           ),
           title: String(fbs('Home', 'Home tab title')),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="contacto"
         options={{
           tabBarIcon: ({ focused }: { focused: boolean }) => (
-            <AntDesign color={focused ? colors.accent : colors.text} name="printer" size={24} />
+            <MaterialCommunityIcons
+              color={focused ? '#0000fe' : '#9a9a9a'}
+              name="dots-horizontal"
+              size={30}
+            />
           ),
-          title: String(fbs('Two', 'Two tab title')),
+          title: 'Contacto',
         }}
       />
     </Tabs>

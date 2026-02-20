@@ -4,7 +4,7 @@ import { getLocales } from 'expo-localization';
 import { Slot } from 'expo-router';
 import { createLocaleContext } from 'fbtee';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ja_JP from '../translations/ja_JP.json' with { type: 'json' };
+import ja_JP from '../../translations/ja_JP.json' with { type: 'json' };
 import { ViewerContext } from '../user/useViewerContext.tsx';
 
 export const unstable_settings = {
@@ -19,7 +19,7 @@ const LocaleContext = createLocaleContext({
   clientLocales: getLocales().map(({ languageTag }) => languageTag),
   loadLocale: async (locale: string) => {
     if (locale === 'ja_JP') {
-      return ja_JP.ja_JP;
+      return ja_JP.translations;
     }
     return {};
   },
