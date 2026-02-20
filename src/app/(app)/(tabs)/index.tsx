@@ -11,8 +11,8 @@ import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CONNECT_TIMEOUT_MS = 12000;
-const NOW_PLAYING_POLL_MS = 15000;
-const NOW_PLAYING_FETCH_TIMEOUT_MS = 10000;
+const NOW_PLAYING_POLL_MS = 60000;
+const NOW_PLAYING_FETCH_TIMEOUT_MS = 5000;
 const DEFAULT_NOW_PLAYING_URL = 'https://stream.motivafm.com/listen/motiva/motiva.mp3';
 const NOW_PLAYING_URL =
   process.env.EXPO_PUBLIC_TODOFM_NOWPLAYING_URL?.trim() || DEFAULT_NOW_PLAYING_URL;
@@ -35,7 +35,6 @@ const createStreamSources = (uri: string): AVPlaybackSource[] => {
       uri: normalized,
       headers: {
         Accept: '*/*',
-        'Icy-MetaData': '1',
         'User-Agent': 'TODOFMClassic/1.0',
       },
     },
@@ -43,7 +42,6 @@ const createStreamSources = (uri: string): AVPlaybackSource[] => {
       uri: `${normalized}/`,
       headers: {
         Accept: '*/*',
-        'Icy-MetaData': '1',
         'User-Agent': 'TODOFMClassic/1.0',
       },
     },
@@ -52,7 +50,6 @@ const createStreamSources = (uri: string): AVPlaybackSource[] => {
       overrideFileExtensionAndroid: 'mp3',
       headers: {
         Accept: '*/*',
-        'Icy-MetaData': '1',
         'User-Agent': 'TODOFMClassic/1.0',
       },
     },
@@ -61,7 +58,6 @@ const createStreamSources = (uri: string): AVPlaybackSource[] => {
       overrideFileExtensionAndroid: 'mp3',
       headers: {
         Accept: '*/*',
-        'Icy-MetaData': '1',
         'User-Agent': 'TODOFMClassic/1.0',
       },
     },
@@ -169,6 +165,8 @@ export default function Index() {
   const [nowPlaying, setNowPlaying] = useState<NowPlaying>(DEFAULT_NOW_PLAYING);
   const soundRef = useRef<Audio.Sound | null>(null);
   const connectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastStatusRef = useRef<PlayerStatus>('idle');
+  const lastIsLiveRef = useRef(false);
 
   useEffect(() => {
     Audio.setAudioModeAsync({
@@ -220,19 +218,35 @@ export default function Index() {
     (status: AVPlaybackStatus) => {
       if (!status.isLoaded) {
         if (status.error) {
-          setIsLive(false);
+          if (lastIsLiveRef.current) {
+            lastIsLiveRef.current = false;
+            setIsLive(false);
+          }
           setIsConnecting(false);
-          setPlayerStatus('error');
+          if (lastStatusRef.current !== 'error') {
+            lastStatusRef.current = 'error';
+            setPlayerStatus('error');
+          }
         }
         return;
       }
       if (status.isBuffering) {
-        setPlayerStatus('buffering');
+        if (lastStatusRef.current !== 'buffering') {
+          lastStatusRef.current = 'buffering';
+          setPlayerStatus('buffering');
+        }
         return;
       }
       setIsConnecting(false);
-      setIsLive(status.isPlaying);
-      setPlayerStatus(status.isPlaying ? 'playing' : 'paused');
+      if (lastIsLiveRef.current !== status.isPlaying) {
+        lastIsLiveRef.current = status.isPlaying;
+        setIsLive(status.isPlaying);
+      }
+      const nextStatus: PlayerStatus = status.isPlaying ? 'playing' : 'paused';
+      if (lastStatusRef.current !== nextStatus) {
+        lastStatusRef.current = nextStatus;
+        setPlayerStatus(nextStatus);
+      }
       if (status.isPlaying) {
         clearConnectTimeout();
       }
@@ -241,6 +255,10 @@ export default function Index() {
   );
 
   const refreshNowPlaying = useCallback(async () => {
+    // Avoid extra network pressure while live audio is playing.
+    if (isLive) {
+      return;
+    }
     if (!NOW_PLAYING_URL) {
       return;
     }
@@ -252,7 +270,7 @@ export default function Index() {
         headers: {
           Accept: 'application/json, text/plain, */*',
           'Icy-MetaData': '1',
-          Range: 'bytes=0-262143',
+          Range: 'bytes=0-32767',
         },
         signal: controller.signal,
       });
@@ -281,7 +299,7 @@ export default function Index() {
     } catch {
       // Ignore metadata fetch errors and keep last known song.
     }
-  }, []);
+  }, [isLive]);
 
   useEffect(() => {
     void refreshNowPlaying();
@@ -323,8 +341,7 @@ export default function Index() {
             source,
             {
               shouldPlay: true,
-              progressUpdateIntervalMillis: 500,
-              androidImplementation: 'MediaPlayer',
+              progressUpdateIntervalMillis: 2000,
             },
             onPlaybackStatus,
           );
